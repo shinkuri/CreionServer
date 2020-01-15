@@ -7,8 +7,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Random;
 
-import nomm.Template;
 import utility.Logger;
+import utility.Template;
 import utility.TemplateParser;
 
 public class ECDatabase implements Closeable {

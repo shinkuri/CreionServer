@@ -6,8 +6,6 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.regex.Pattern;
 
-import nomm.Template;
-
 public class TemplateParser {
 	
 	private static final Pattern isNumber = Pattern.compile("-?\\d+(\\.\\d+)?");

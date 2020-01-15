@@ -1,8 +1,6 @@
-package nomm;
+package utility;
 
 import java.util.HashSet;
-
-import utility.ComponentPreset;
 
 public class Template {
 	
