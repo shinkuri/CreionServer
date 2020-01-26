@@ -37,6 +37,6 @@ public abstract class AbstractSystem {
 		messageBus.unregisterRecipient(this);
 	}
 	
-	protected abstract void run();
+	protected abstract void update();
 	protected abstract void processMessages();
 }
