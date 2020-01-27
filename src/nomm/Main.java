@@ -4,6 +4,9 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import javax.sound.midi.Sequence;
 
 import bus.MessageBus;
 import utility.Logger;
@@ -40,6 +43,32 @@ public class Main extends Thread {
 	@Override
 	public void run() {
 		
+	}
+	
+	/**
+	 * Awaits termination of all running system simulations,
+	 * shuts them down, and then returns.
+	 */
+	private void shutdown() {
+		Logger.INFO.log("Starting Shudown Sequence...");
+		Logger.INFO.log("Waiting for all systems to finish execution or until 1000ms have passed");
+		systemsExecutor.shutdown();
+		try {
+			systemsExecutor.awaitTermination(1000, TimeUnit.MILLISECONDS);
+		} catch (InterruptedException e) {
+			Logger.ERROR.log("Operator Thread was interupted while waiting for systems to finish execution");
+			e.printStackTrace(Logger.ERROR.getPrintStream());
+		}
+		if(!systemsExecutor.isTerminated()) {
+			Logger.INFO.log("At least one system failed to terminate in time");
+		}
+		Logger.INFO.log("Releasing resources held by systems");
+		for(Entry<String, AbstractSystem> system : systems.entrySet()) {
+			Logger.INFO.log("Unregistering " + system.getKey() + " from message bus");
+			messageBus.unregisterRecipient(system.getValue());
+			Logger.INFO.log("Stopping system");
+			system.getValue().stop();
+		}
 	}
 	
 	/**
