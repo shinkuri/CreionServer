@@ -7,7 +7,7 @@ import java.util.Set;
 
 import bus.Message;
 import bus.MessageBus;
-import nomm.AbstractSystem;
+import main.AbstractSystem;
 import utility.Logger;
 
 public class NetworkSystem extends AbstractSystem {

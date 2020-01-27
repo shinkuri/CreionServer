@@ -1,11 +1,14 @@
-package nomm;
+package main;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map.Entry;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -35,10 +38,11 @@ public class Main extends Thread {
 		super.setName("Creion Server Operator Thread");
 		Logger.INFO.log("Operator Thread running as \"Creion Server Operator Thread\"");
 		// TODO Add default systems
-		
-		for(Entry<String, AbstractSystem> system : systems.entrySet()) {
-			Logger.INFO.log("Registering default system to message bus: " + system.getKey());
-			messageBus.registerRecipient(system.getValue());
+		// TODO dummy system is just for scheduler debugging
+		final int DUMMY_COUNT = 4;
+		for(int i = 0; i < DUMMY_COUNT; i++) {
+			final DummySystem dummySystem = new DummySystem(messageBus);
+			systems.put("dummy_" + i, dummySystem);
 		}
 		
 		Logger.INFO.log("Setting up System Thread Pool with " + threadPoolSize + " threads");
@@ -62,28 +66,65 @@ public class Main extends Thread {
 				Logger.INFO.log("Simulating in " + blockCount + " block(s) @" + delta + "ms");
 				// Assign a number of systems to each block equal to the number of threads
 				final ArrayList<HashSet<AbstractSystem>> blocks = new ArrayList<>();
+				final CountDownLatch[] barriers = new CountDownLatch[blockCount];
 				final Iterator<AbstractSystem> it = systems.values().iterator();
+				int remaining = systems.values().size();
 				for(int b = 0; b < blockCount; b++) {
 					final HashSet<AbstractSystem> block = new HashSet<>();
+					// Set up a barrier for this batch to synchronize on.
+					// The party count is equals the size of the batch
+					final CountDownLatch barrier = new CountDownLatch(
+							remaining > systemsExecutor.getMaximumPoolSize() 
+							? systemsExecutor.getMaximumPoolSize() : remaining);
+					barriers[b] = barrier;
 					for(int i = 0; i < systemsExecutor.getMaximumPoolSize(); i++) {
 						if(it.hasNext()) {
-							block.add(it.next());
+							final AbstractSystem system = it.next();
+							system.setBarrier(barrier);
+							block.add(system);
+							remaining--;
 						} else {
 							break;
 						}
 					}
+					blocks.add(block);
 				}
 				// Queue up block by block and wait for delta milliseconds
 				for(int b = 0; b < blockCount; b++) {
+					// Aquire block start time
+					final long startTime = System.currentTimeMillis();
+					
+					final HashMap<String, Future<?>> futures = new HashMap<>();
 					for(AbstractSystem system : blocks.get(b)) {
-						systemsExecutor.submit(system);
+						futures.put(system.toString(), systemsExecutor.submit(system));
 					}
-					// TODO awaitTermination?
+					// Sync on this batches barrier
+					barriers[b].await(delta * 10, TimeUnit.MILLISECONDS);
+					boolean allDone = true;
+					for(Entry<String, Future<?>> future : futures.entrySet()) {
+						if(!future.getValue().isDone()) {
+							// Try to get the system to stop.
+							future.getValue().cancel(true);
+							Logger.ERROR.log("System " + future.getKey() + " is simulating for more than 10x as long as it should"
+									+ "and was requested to stop");
+							allDone = false;
+							break;
+						}
+					}
+					if(!allDone) {
+						Logger.ERROR.log("A system has broken the batch synchronization barrier\n"
+								+ "Things may go wrong after here, so the server will shut down for security");
+						running = false;
+						break;
+					} else {
+						final long blockTime = System.currentTimeMillis() - startTime;
+						Logger.INFO.log("Block ended after " + blockTime + "ms");
+					}
 				}
 				
 				// Debug thing so the server is up for at least 10s before shutting down again
 				Logger.INFO.log("Running");
-				Thread.sleep(10000);
+				Thread.sleep(5000);
 				running = false;
 			}			
 		} catch (InterruptedException e) {
@@ -115,8 +156,6 @@ public class Main extends Thread {
 		}
 		Logger.INFO.log("Releasing resources held by systems");
 		for(Entry<String, AbstractSystem> system : systems.entrySet()) {
-			Logger.INFO.log("Unregistering " + system.getKey() + " from message bus");
-			messageBus.unregisterRecipient(system.getValue());
 			Logger.INFO.log("Stopping system");
 			system.getValue().stop();
 		}

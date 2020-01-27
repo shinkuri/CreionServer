@@ -1,6 +1,6 @@
 package bus;
 
-import nomm.AbstractSystem;
+import main.AbstractSystem;
 
 public class Message {
 	
