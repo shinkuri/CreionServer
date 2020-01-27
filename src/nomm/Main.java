@@ -1,6 +1,9 @@
 package nomm;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -50,6 +53,35 @@ public class Main extends Thread {
 	public void run() {
 		try {
 			while(!Thread.interrupted() && running) {
+				// Calculate how much time each system gets to run:
+				// 100ms, 2 threads, 2 systems -> 100ms per system
+				// 100ms, 1 thread, 2 systems -> 50ms per system
+				// 100ms, 2 threads, 1 system -> 100ms per system
+				final int blockCount = (int) (Math.max(1, Math.ceil(systems.size() / systemsExecutor.getMaximumPoolSize())));
+				final int delta = tickTimeMilliseconds / blockCount;
+				Logger.INFO.log("Simulating in " + blockCount + " block(s) @" + delta + "ms");
+				// Assign a number of systems to each block equal to the number of threads
+				final ArrayList<HashSet<AbstractSystem>> blocks = new ArrayList<>();
+				final Iterator<AbstractSystem> it = systems.values().iterator();
+				for(int b = 0; b < blockCount; b++) {
+					final HashSet<AbstractSystem> block = new HashSet<>();
+					for(int i = 0; i < systemsExecutor.getMaximumPoolSize(); i++) {
+						if(it.hasNext()) {
+							block.add(it.next());
+						} else {
+							break;
+						}
+					}
+				}
+				// Queue up block by block and wait for delta milliseconds
+				for(int b = 0; b < blockCount; b++) {
+					for(AbstractSystem system : blocks.get(b)) {
+						systemsExecutor.submit(system);
+					}
+					// TODO awaitTermination?
+				}
+				
+				// Debug thing so the server is up for at least 10s before shutting down again
 				Logger.INFO.log("Running");
 				Thread.sleep(10000);
 				running = false;
