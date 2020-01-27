@@ -20,10 +20,13 @@ public class Main extends Thread {
 	private final HashMap<String, AbstractSystem> systems = new HashMap<>();
 	private final ThreadPoolExecutor systemsExecutor;
 	
+	private boolean running = true;
+	
 	public Main(int port, int threadPoolSize, int tickTimeMilliseconds) {
 		this.port = port;
 		this.tickTimeMilliseconds = tickTimeMilliseconds;
 		
+		Logger.INFO.log("-------------------------");
 		Logger.INFO.log("Welcome to Creion Server!");
 		
 		super.setName("Creion Server Operator Thread");
@@ -38,11 +41,26 @@ public class Main extends Thread {
 		Logger.INFO.log("Setting up System Thread Pool with " + threadPoolSize + " threads");
 		systemsExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadPoolSize);
 		systemsExecutor.allowCoreThreadTimeOut(false);
+		
+		Logger.INFO.log("Initialization complete");
+		Logger.INFO.log("-----------------------");
 	}
 	
 	@Override
 	public void run() {
-		
+		try {
+			while(!Thread.interrupted() && running) {
+				Logger.INFO.log("Running");
+				Thread.sleep(10000);
+				running = false;
+			}			
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			shutdown();
+			Logger.INFO.log("Good bye!");
+		}
 	}
 	
 	/**
@@ -50,7 +68,8 @@ public class Main extends Thread {
 	 * shuts them down, and then returns.
 	 */
 	private void shutdown() {
-		Logger.INFO.log("Starting Shudown Sequence...");
+		Logger.INFO.log("--------------------------");
+		Logger.INFO.log("Starting Shudown Sequence:");
 		Logger.INFO.log("Waiting for all systems to finish execution or until 1000ms have passed");
 		systemsExecutor.shutdown();
 		try {
@@ -91,15 +110,13 @@ public class Main extends Thread {
 			final int tickTime = Integer.parseInt(args[2]);
 			
 			final Main server = new Main(port, threadPoolSize, tickTime);
-			Logger.INFO.log("Starting Creion Server...");
 			server.start();
+			Logger.INFO.log("Creion Server is now running");
 		} catch (ArrayIndexOutOfBoundsException e) {
 			Logger.ERROR.log("An argument count of less than three was supplied. "
 					+ "Please supply the port number, thread pool size, and tick time in milliseconds");
 		} catch (NumberFormatException e) {
 			Logger.ERROR.log("At least one argument could not be parsed as an integer.");
-		} finally {
-			Logger.ERROR.log("Shutting down.");
 		}
 				
 		//final NetworkSystem networkSystem = new NetworkSystem(messageBus, port);

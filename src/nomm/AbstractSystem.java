@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import bus.MessageBus;
 
-public abstract class AbstractSystem {
+public abstract class AbstractSystem implements Runnable {
 	
 	private final UUID uuid = UUID.randomUUID();
 	
@@ -37,6 +37,5 @@ public abstract class AbstractSystem {
 		messageBus.unregisterRecipient(this);
 	}
 	
-	protected abstract void update();
 	protected abstract void processMessages();
 }

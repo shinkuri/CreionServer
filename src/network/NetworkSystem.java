@@ -75,7 +75,7 @@ public class NetworkSystem extends AbstractSystem {
 	}
 	
 	@Override
-	protected void update() {
+	public void run() {
 		
 	}
 
