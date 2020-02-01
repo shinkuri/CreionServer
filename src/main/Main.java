@@ -12,6 +12,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import bus.MessageBus;
+import config.Config;
 import utility.Logger;
 
 public class Main extends Thread {
@@ -25,9 +26,10 @@ public class Main extends Thread {
 	
 	private boolean running = true;
 	
-	public Main(int port, int threadPoolSize, int tickTimeMilliseconds) {
-		this.port = port;
-		this.tickTimeMilliseconds = tickTimeMilliseconds;
+	public Main() {
+		this.port = Config.getAsInt("port");
+		final int maxTps = Config.getAsInt("max_tps");
+		tickTimeMilliseconds = 1000 / maxTps;
 		
 		Logger.INFO.log("-------------------------");
 		Logger.INFO.log("Welcome to Creion Server!");
@@ -42,6 +44,7 @@ public class Main extends Thread {
 			systems.put("dummy_" + i, dummySystem);
 		}
 		
+		final int threadPoolSize = Config.getAsInt("thread_pool_size");
 		Logger.INFO.log("Setting up System Thread Pool with " + threadPoolSize + " threads");
 		systemsExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadPoolSize);
 		systemsExecutor.allowCoreThreadTimeOut(false);
@@ -158,33 +161,18 @@ public class Main extends Thread {
 		}
 	}
 	
-	/**
-	 * Main method to start the server. Arguments are:</br>
-	 * - The port number on which the server should listen on.</br>
-	 * - Number of threads that the server should use for simulation.</br>
-	 * - Tick time in milliseconds. Each system will try to simulate 
-	 * 	a single tick within this time period. If the system finishes 
-	 * 	within the given time, it will be scheduled for the next tick
-	 * 	immediately. Otherwise the issue will be logged and the system
-	 * 	will be scheduled as soon as possible in an effort to catch up.
-	 * @param args
-	 * 			portNumber, threadPoolSize, tickTime
-	 */
 	public static void main(String[] args) {
 		
 		try {
-			final int port = Integer.parseInt(args[0]);
-			final int threadPoolSize = Integer.parseInt(args[1]);
-			final int tickTime = Integer.parseInt(args[2]);
+			final String configPath = args[0];
+			Config.load(configPath);
 			
-			final Main server = new Main(port, threadPoolSize, tickTime);
+			final Main server = new Main();
 			server.start();
 			Logger.INFO.log("Creion Server is now running");
 		} catch (ArrayIndexOutOfBoundsException e) {
-			Logger.ERROR.log("An argument count of less than three was supplied. "
-					+ "Please supply the port number, thread pool size, and tick time in milliseconds");
-		} catch (NumberFormatException e) {
-			Logger.ERROR.log("At least one argument could not be parsed as an integer.");
+			Logger.ERROR.log("Missing startup arguments!\n"
+					+ "Please supply the path to the config file");
 		}
 		
 	}

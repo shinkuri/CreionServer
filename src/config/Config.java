@@ -1,21 +1,23 @@
 package config;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 
 import com.google.gson.Gson;
 
-import utility.File;
 import utility.Logger;
 
 public class Config {
 	
 	private static final HashMap<String, String> config = new HashMap<>();
 	
-	public static void load(File file) {
+	public static void load(String path) {
 		if(config.size() == 0) {
-			try (BufferedReader br = file.getReader()){
+			try (BufferedReader br = new BufferedReader(new InputStreamReader(
+					new FileInputStream(path)))){
 				final StringBuilder sb = new StringBuilder();
 				String line;
 				while ((line = br.readLine()) != null) {
@@ -36,12 +38,31 @@ public class Config {
 				
 			} catch (IOException ex) {
 				Logger.ERROR.log("Failed to read config.json");
+				System.exit(1);
 			}
-			
 		}
 	}
 	
-	public static String get(String key) {
+	public static String getAsString(String key) {
+		if(!config.containsKey(key)) {
+			Logger.ERROR.log("An unknown config value was requested");
+			return "";
+		} else if (config.size() == 0) {
+			Logger.ERROR.log("Something tried to access configs before the config was loaded");
+			throw new IllegalStateException("Config file has not been loaded yet");
+		}
 		return config.get(key);
 	}
+	
+	public static int getAsInt(String key) {
+		if(!config.containsKey(key)) {
+			Logger.ERROR.log("An unknown config value was requested");
+			return 0;
+		} else if (config.size() == 0) {
+			Logger.ERROR.log("Something tried to access configs before the config was loaded");
+			throw new IllegalStateException("Config file has not been loaded yet");
+		}
+		return Integer.valueOf(config.get(key));
+	}
+	
 }
