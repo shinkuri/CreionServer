@@ -5,14 +5,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map.Entry;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
-import javax.sound.midi.Sequence;
 
 import bus.MessageBus;
 import utility.Logger;
@@ -189,13 +186,6 @@ public class Main extends Thread {
 		} catch (NumberFormatException e) {
 			Logger.ERROR.log("At least one argument could not be parsed as an integer.");
 		}
-				
-		//final NetworkSystem networkSystem = new NetworkSystem(messageBus, port);
-		//networkSystem.stop();
-		/*
-		try (ECDatabase ecDatabase = new ECDatabase("jdbc:sqlite:data/db.db")) {
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}*/
+		
 	}
 }
