@@ -19,7 +19,7 @@ public class DummySystem extends AbstractSystem {
 		Logger.INFO.log("System " + super.toString() + " is running");
 		processMessages();
 		try {
-			Thread.sleep(600);
+			Thread.sleep(30);
 		} catch (InterruptedException e) {
 			Logger.ERROR.log("Dummy was interrupted while taking a nap");
 			e.printStackTrace(Logger.ERROR.getPrintStream());
