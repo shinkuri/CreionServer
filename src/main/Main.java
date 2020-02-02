@@ -41,7 +41,7 @@ public class Main extends Thread {
 		// TODO dummy system is just for scheduler debugging
 		final int DUMMY_COUNT = 2;
 		for(int i = 0; i < DUMMY_COUNT; i++) {
-			final DummySystem dummySystem = new DummySystem(messageBus);
+			final DummySystem dummySystem = new DummySystem(messageBus, 30);
 			systems.put("dummy_" + i, dummySystem);
 		}
 		Logger.INFO.log("Finished loading systems");

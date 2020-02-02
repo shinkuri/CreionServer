@@ -4,9 +4,13 @@ import bus.MessageBus;
 import utility.Logger;
 
 public class DummySystem extends AbstractSystem {
-
-	public DummySystem(MessageBus messageBus) {
+	
+	private final int delayMS;
+	
+	public DummySystem(MessageBus messageBus, int delayMS) {
 		super(messageBus);
+		
+		this.delayMS = delayMS;
 	}
 
 	@Override
@@ -19,7 +23,7 @@ public class DummySystem extends AbstractSystem {
 		Logger.INFO.log("System " + super.toString() + " is running");
 		processMessages();
 		try {
-			Thread.sleep(30);
+			Thread.sleep(delayMS);
 		} catch (InterruptedException e) {
 			Logger.ERROR.log("Dummy was interrupted while taking a nap");
 			e.printStackTrace(Logger.ERROR.getPrintStream());
