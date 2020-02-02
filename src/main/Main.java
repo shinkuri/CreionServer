@@ -36,13 +36,15 @@ public class Main extends Thread {
 		
 		super.setName("Creion Server Operator Thread");
 		Logger.INFO.log("Operator Thread running as \"Creion Server Operator Thread\"");
-		// TODO Add default systems
+		Logger.INFO.log("Loading systems:");
+		systems.put("entity_system", new EntitySystem(messageBus));
 		// TODO dummy system is just for scheduler debugging
-		final int DUMMY_COUNT = 4;
+		final int DUMMY_COUNT = 2;
 		for(int i = 0; i < DUMMY_COUNT; i++) {
 			final DummySystem dummySystem = new DummySystem(messageBus);
 			systems.put("dummy_" + i, dummySystem);
 		}
+		Logger.INFO.log("Finished loading systems");
 		
 		final int threadPoolSize = Config.getAsInt("thread_pool_size");
 		Logger.INFO.log("Setting up System Thread Pool with " + threadPoolSize + " threads");
@@ -156,7 +158,7 @@ public class Main extends Thread {
 		}
 		Logger.INFO.log("Releasing resources held by systems");
 		for(Entry<String, AbstractSystem> system : systems.entrySet()) {
-			Logger.INFO.log("Stopping system");
+			Logger.INFO.log("Stopping system:" + system.getKey());
 			system.getValue().stop();
 		}
 	}

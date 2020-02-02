@@ -16,6 +16,7 @@ public class Config {
 	
 	public static void load(String path) {
 		if(config.size() == 0) {
+			Logger.INFO.log("Loading config.json");
 			try (BufferedReader br = new BufferedReader(new InputStreamReader(
 					new FileInputStream(path)))){
 				final StringBuilder sb = new StringBuilder();
