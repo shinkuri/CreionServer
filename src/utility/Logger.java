@@ -17,7 +17,9 @@ public class Logger {
 	public static class INFO {
 		
 		public static void log(String msg) {
-			System.out.println(getTimeStamp() + " INFO: " + msg);
+			System.out.println(
+					new StringBuilder(getTimeStamp()).append(" INFO: ").append(msg)
+					.toString());
 		}
 		
 		public static PrintStream getPrintStream() {
@@ -28,7 +30,9 @@ public class Logger {
 	public static class ERROR {
 		
 		public static void log(String msg) {
-			System.err.println(getTimeStamp() + " ERROR: " + msg);
+			System.err.println(
+					new StringBuilder(getTimeStamp()).append(" ERROR: ").append(msg)
+					.toString());
 		}
 		
 		public static PrintStream getPrintStream() {
