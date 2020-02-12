@@ -1,27 +1,22 @@
 package utility;
 
 import java.io.PrintStream;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Date;
+import java.time.format.DateTimeFormatter;
 
 public class Logger {
 	
-	// oof
 	private static String getTimeStamp() {
-		final Timestamp stamp = new Timestamp(new Date().getTime());
-		final LocalDateTime ldt = stamp.toLocalDateTime();
-		return new StringBuilder().append("[")
-				.append(ldt.getHour()).append(":")
-				.append(ldt.getMinute()).append(":")
-				.append(ldt.getSecond()).append("]")
-				.toString();
+		final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
+		LocalDateTime now = LocalDateTime.now();
+		
+		return new StringBuilder()
+				.append("[").append(dtf.format(now)).append("]").toString();
 	}
 	
 	public static class INFO {
 		
 		public static void log(String msg) {
-			
 			System.out.println(getTimeStamp() + " INFO: " + msg);
 		}
 		
