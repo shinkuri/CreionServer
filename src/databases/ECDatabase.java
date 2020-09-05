@@ -5,57 +5,72 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Random;
+import java.util.HashMap;
 
 import utility.Logger;
-import utility.Template;
-import utility.TemplateParser;
 
 public class ECDatabase implements Closeable {
 	
-	private final Connection dbConn; 
-	
-	public void spawnRandom() {
-		final Random random = new Random();
+	private static final HashMap<String, String> queries = new HashMap<>();
+	static {
+		final String end = ");";
+		StringBuilder s = new StringBuilder();
+		s.append("CREATE TABLE IF NOT EXISTS templates(");
+		s.append("template_id INT PRIMARY KEY,");
+		s.append("human_readable_name CHAR");
+		s.append(end);
+		queries.put("create_templates", s.toString());
+		s = new StringBuilder();
+		
+		s.append("CREATE TABLE IF NOT EXISTS template_component_mapping(");
+		s.append("template_id INT,");
+		s.append("component_id INT");
+		s.append(end);
+		queries.put("create_template_component_mapping", s.toString());
+		s = new StringBuilder();
+		
+		s.append("CREATE TABLE IF NOT EXISTS entities(");
+		s.append("entity_id INT PRIMARY KEY,");
+		s.append("human_readable_name CHAR");
+		s.append(end);
+		queries.put("create_entities", s.toString());
+		s = new StringBuilder();
+		
+		s.append("CREATE TABLE IF NOT EXISTS components(");
+		s.append("component_id INT PRIMARY KEY,");
+		s.append("human_readable_name CHAR,");
+		s.append("table_name CHAR");
+		s.append(end);
+		queries.put("create_components", s.toString());
+		s = new StringBuilder();
+		
+		s.append("CREATE TABLE IF NOT EXISTS entity_component_mapping(");
+		s.append("entity_id INT,");
+		s.append("component_id INT,");
+		s.append("component_data_id INT");
+		s.append(end);
+		queries.put("create_entity_component_mapping", s.toString());
+		s = new StringBuilder();
+		
 	}
+	
+	private final Connection dbConn; 
 	
 	public ECDatabase(String dbPath) throws SQLException {
 		
 		dbConn = DriverManager.getConnection(dbPath);
 		Logger.INFO.log("Connected to Entity Database");
-		// DDL
-		final String DDLtemplates = "CREATE TABLE IF NOT EXISTS templates(\n"
-				+ "template_id INT PRIMARY KEY,\n"
-				+ "human_readable_name CHAR);";
-		final String DDLtemplateComponentMapping = "CREATE TABLE IF NOT EXISTS \n"
-				+ "template_component_mapping(\n"
-				+ "template_id INT, component_id INT);";
-		final String DDLentities = "CREATE TABLE IF NOT EXISTS entities(\n"
-				+ "entity_id INT PRIMARY KEY,\n"
-				+ "human_readable_name CHAR);";
-		final String DDLcomponents = "CREATE TABLE IF NOT EXISTS components(\n"
-				+ "component_id INT PRIMARY KEY,\n"
-				+ "human_readable_name CHAR,\n"
-				+ "table_name CHAR);";
-		final String DDLentityComponentMapping = "CREATE TABLE IF NOT EXISTS \n"
-				+ "entity_component_mapping(\n"
-				+ "entity_id INT, component_id INT, component_data_id INT);";
-		
+
 		final Statement stmt = dbConn.createStatement();
-		stmt.addBatch(DDLtemplates);
-		stmt.addBatch(DDLtemplateComponentMapping);
-		stmt.addBatch(DDLentities);
-		stmt.addBatch(DDLcomponents);
-		stmt.addBatch(DDLentityComponentMapping);
+		stmt.addBatch(queries.get("create_templates"));
+		stmt.addBatch(queries.get("create_template_component_mapping"));
+		stmt.addBatch(queries.get("create_entities"));
+		stmt.addBatch(queries.get("create_components"));
+		stmt.addBatch(queries.get("create_entity_component_mapping"));
 		stmt.executeBatch();
 		
 		Logger.INFO.log("Executed Entity Database DDL");
 		
-		for(Template template : TemplateParser.parse("/nomm/templates.txt")) {
-			// already exists?
-			
-			// if no, do thing
-		}
 	}
 	
 	@Override
@@ -66,4 +81,6 @@ public class ECDatabase implements Closeable {
 			Logger.ERROR.log("Exception while closing Entity Database connection");
 		}
 	}
+	
+	
 }
