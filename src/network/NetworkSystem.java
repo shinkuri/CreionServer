@@ -1,88 +1,56 @@
 package network;
 
+import utility.Logger;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashSet;
 import java.util.Set;
 
-import bus.Message;
-import bus.MessageBus;
-import main.AbstractSystem;
-import utility.Logger;
-
-public class NetworkSystem extends AbstractSystem {
+public class NetworkSystem {
 		
-	private NetworkReceptor receptor;
-	private Thread receptorThread;
+	private final NetworkReceptor receptor;
 	
-	private final HashSet<NetworkClient> clients = new HashSet<>();
+	private final Set<NetworkClient> clients = new HashSet<>();
 	
-	public NetworkSystem(MessageBus messageBus, int port) {
-		super(messageBus);
-		
-		Logger.INFO.log("Starting Network System");		
-				
-		try {
-			final ServerSocket ss = new ServerSocket(port);
-			ss.setSoTimeout(1000); // Important so the NetworkReceptor thread can react to thread interruptions
-			receptor = new NetworkReceptor(this, ss);
-		} catch (IOException e) {
-			Logger.ERROR.log("Error while binding Server Socket: " + e.getLocalizedMessage());
-		}
-		
-		receptorThread = new Thread(receptor);
-		receptorThread.start();
-		
-		Logger.INFO.log("Successfully started Network System");
+	public NetworkSystem(int port) throws IOException {
+		Logger.INFO.log("Binding to network");
+		final ServerSocket ss = new ServerSocket(port);
+		ss.setSoTimeout(1000); // Important so the NetworkReceptor thread can react to thread interruptions
+		receptor = new NetworkReceptor(this, ss);
+		Logger.INFO.log("Successfully bound to network");
 	}
 	
 	/**
 	 * Should only be called by the Network Receptor
 	 */
-	public void addClient(NetworkClient client) {
+	protected void addClient(NetworkClient client) {
 		synchronized(clients) {
 			clients.add(client);
 		}
 	}
-	
-	/**
-	 * Do system specific clean up
-	 */
-	@Override
+
 	public void stop() {
-		Logger.INFO.log("Stopping Network System...");
-		
-		super.stop();
-		
+		Logger.INFO.log("Detaching from network");
+
 		try {
 			receptor.close();
-			receptorThread.interrupt();
-			receptorThread.join();
-			
+			receptor.interrupt();
+			receptor.join();
+
 			synchronized(clients) {
 				for(NetworkClient client : clients) {
 					client.close();
-				}				
+				}
 			}
 		} catch (IOException e) {
-			Logger.ERROR.log("Error while closing a Socket");
+			Logger.ERROR.log("Error while closing a socket");
 		} catch (InterruptedException e) {
-			Logger.ERROR.log("Network System Thread was interrupted while waiting for Server Socket Thread to die");
+			Logger.ERROR.log("Network thread was interrupted while waiting for receptor thread to exit");
 			e.printStackTrace(Logger.ERROR.getPrintStream());
 		}
-		
-		Logger.INFO.log("Sucessfully shut down Network System");
-	}
-	
-	@Override
-	public void run() {
-		
+
+		Logger.INFO.log("Successfully detached from network");
 	}
 
-	@Override
-	protected void processMessages() {
-		final Set<Message> messages =  super.messageBus.receive(this);
-		// Do stuff
-	}
-	
 }

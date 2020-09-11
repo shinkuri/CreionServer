@@ -9,7 +9,7 @@ import java.net.SocketTimeoutException;
 
 import utility.Logger;
 
-public class NetworkReceptor implements Runnable, Closeable {
+public class NetworkReceptor extends Thread implements Closeable {
 	
 	private final NetworkSystem networkSystem;
 	private final ServerSocket serverSocket;
