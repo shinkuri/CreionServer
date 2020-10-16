@@ -2,7 +2,7 @@ package data;
 
 import java.nio.ByteBuffer;
 
-public class Positions {
+public class Positions implements Broadcastable {
 
     public static final int BYTE_COUNT = 12;
 
@@ -36,6 +36,7 @@ public class Positions {
         this.y = y;
     }
 
+    @Override
     public byte[] bytes() {
         return ByteBuffer.allocate(BYTE_COUNT).putInt(id).putInt(x).putInt(y).array();
     }
