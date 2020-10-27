@@ -1,6 +1,6 @@
 package data;
 
-public class Users {
+public class User {
 
     int id;
 
