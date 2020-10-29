@@ -30,7 +30,7 @@
                             <archive>
                                 <manifest>
                                     <mainClass>
-                                        com.baeldung.executable.ExecutableMavenJar
+                                        Main
                                     </mainClass>
                                 </manifest>
                             </archive>
