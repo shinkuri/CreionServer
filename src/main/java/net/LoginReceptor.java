@@ -19,7 +19,7 @@ public class LoginReceptor extends Thread {
     public LoginReceptor(int port, int timeout) throws SocketException {
         socket = new DatagramSocket(port);
         socket.setSoTimeout(timeout);
-    }
+    } 
 
     @Override
     public void run() {
